@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputProducto = document.querySelector("#inputProducto");
     const cuerpoTabla = document.querySelector(".listaFinal tbody");
     //console.log(cuerpoTabla)
+    const fragment= document.createDocumentFragment();
 
     //ARRAY ALMACENAR LOCAL 
 
@@ -18,14 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ev.preventDefault();
         const nombreProducto = inputProducto.value;
         agregarProducto(nombreProducto);
+        pintarLista();
         formulario.reset();
     });
     listaFinal.addEventListener("click", (ev) => {
         //console.log("eliminar");
         ev.preventDefault();
         const id = ev.target.dataset.id;
-        const producto = arrayLocal.find((prod) => prod.id === id);
-        eliminarProducto(producto);
+        //const producto = arrayLocal.find(()=>)
+        eliminarProducto(id);
     });
     //FUNCIONES
     //leerLocal() = recupera productos 
@@ -37,18 +39,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const arrayLocal = JSON.parse(localStorage.getItem("producto")) || [];
         return arrayLocal;
     };
-    const arrayLocal = leerLocal();
+    //const arrayLocal = leerLocal();
     //-----------------------------------------------
     const guardarLocal = (arrayLocal) => {
         const listaProductos = JSON.stringify(arrayLocal); //hace la lista un string completo
+        
         localStorage.setItem("producto", listaProductos);
         //en productos añadir el string 
-        pintarLista(arrayLocal);
+        //pintarLista(arrayLocal);
     };
     //------------------------------------------
-    const pintarLista = (arrayLocal) => {
+    const pintarLista = () => {
         cuerpoTabla.innerHTML = "";
-        arrayLocal.forEach((productos) => {
+        const arrayLocal= leerLocal();
+        arrayLocal.forEach(({nombre, cantidad, id}) => {
             /* const elemento = document.createElement("LI");
              elemento.textContent= productos.nombre;
              const cantidad = document.createElement("P");
@@ -61,44 +65,68 @@ document.addEventListener("DOMContentLoaded", () => {
             const columnaEliminar = document.createElement("td");
             const botonEliminar = document.createElement("button");
 
-            columnaProducto.textContent = productos.nombre;
-            columnaCantidad.textContent = productos.cantidad;
+            columnaProducto.textContent = nombre;
+            columnaCantidad.textContent = cantidad;
             botonEliminar.textContent = "Eliminar";
-            botonEliminar.dataset.id = productos.id; //captura el id del producto con el ev click 
+            botonEliminar.dataset.id = id; //captura el id del producto con el ev click 
 
             columnaEliminar.appendChild(botonEliminar);
             fila.append(columnaProducto, columnaCantidad, columnaEliminar);
-            cuerpoTabla.appendChild(fila);   
+        
+            fragment.append(fila);
         });
+        cuerpoTabla.appendChild(fragment);
     };
     //-------------------------------------------------------
     //recoger dato de fomulario 
     const agregarProducto = (nombreProducto) => {
-        const existente = arrayLocal.find((producto) =>
-            (producto.nombre === nombreProducto));
+        const arrayLocal= leerLocal();
+        console.log(arrayLocal);
+        let nuevoArray;
+        const existente = arrayLocal.find((producto) => {
+            console.log(producto);
+        return producto.nombre.toLowerCase() === nombreProducto.toLowerCase() 
+        });
 
+            console.log(existente, " en agregar producto")
+            if (!existente) return;
         if (existente) {
             existente.cantidad = existente.cantidad + 1;
 
-        } else arrayLocal.push({
+        } else {
+           const nuevoProducto= {
             id: nombreProducto,
             cantidad: 1,
             nombre: nombreProducto,
-        });
-        guardarLocal(arrayLocal);
+            };
+            nuevoArray = [ 
+                ...arrayLocal,
+                nuevoProducto
+            ]
+            
+        };
+       guardarLocal(nuevoArray);
     };
 
-    pintarLista(arrayLocal);
     //------------------------------------------------
-    const eliminarProducto = (producto) => {
-        if (producto.cantidad > 1) {
-            producto.cantidad -= 1;
-        }else{
-            const indice =arrayLocal.indexOf(producto); //buscar en el array
+    const eliminarProducto = (id) => {
+        const arrayLocal = leerLocal();
+        const existente = arrayLocal.find((producto)=>producto.id === id);
+        let arrayNuevo;
+        //!existente && return;
+        if (!existente) return;
+
+        if (existente.cantidad > 1) {
+            existente.cantidad -= 1;
+        } else {
+            /*const indice = arrayLocal.indexOf(existente); //buscar en el array
             if (indice !== -1) {
                 arrayLocal.splice(indice, 1)
-            };
-    pintarLista(arrayLocal);
+            };*/
+            arrayNuevo= arrayLocal.filter((producto)=>producto.id !== id);
+            pintarLista(arrayNuevo);
+        };
+        pintarLista(arrayLocal);
     };
-    };
+pintarLista();
 }); //FIN - DOMContentLoaded
